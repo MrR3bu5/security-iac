@@ -1,106 +1,111 @@
-# Terraform – Infrastructure as Code (Proxmox)
+# Terraform, Infrastructure as Code, Proxmox
 
 This directory contains the Terraform configuration used to provision and manage infrastructure for the `security-homelab` project.
 
-The goal of this Terraform implementation is not simply VM creation, but to model **real-world infrastructure patterns** including authentication, RBAC, template-based provisioning, and reproducible builds.
+The purpose of this implementation is to model realistic infrastructure patterns, not just create virtual machines. The design focuses on authentication, RBAC, template driven provisioning, and repeatable builds that reflect enterprise automation practices.
 
-Terraform serves as the **authoritative source of truth** for lab infrastructure.
+Terraform acts as the source of truth for lab infrastructure.
 
 ---
 
 ## Scope and Intent
 
-This Terraform configuration is responsible for:
+This configuration is responsible for:
 
-- Authenticating to Proxmox via **API tokens** (no credentials stored in code)
-- Enforcing Proxmox RBAC and privilege separation
-- Provisioning virtual machines using **template-based cloning**
-- Injecting SSH access via **cloud-init**
-- Exposing infrastructure metadata through Terraform outputs
-- Supporting future handoff into configuration management and security automation
+- Authenticating to Proxmox using API tokens with no credentials stored in code
+- Enforcing RBAC and privilege separation
+- Provisioning virtual machines through template based cloning
+- Injecting SSH access with cloud init
+- Publishing infrastructure metadata through Terraform outputs
+- Supporting future integration with configuration management and security workflows
 
 ---
 
 ## Authentication Model
 
-Terraform authenticates to Proxmox using a **dedicated API token** assigned to a service account.
+Terraform connects to Proxmox through a dedicated API token assigned to a service account.
 
-Key characteristics:
-- No passwords or secrets committed to Git
-- API token permissions are explicitly assigned using **API Token Permissions**
-- Initial broad permissions (`PVEAdmin`) were used for learning and validation
-- Future iterations will reduce permissions to least privilege
+Key design choices:
 
-This mirrors enterprise automation patterns and avoids implicit trust.
+- No passwords or secrets committed to the repository
+- API token permissions assigned explicitly through API Token Permissions
+- Broad permissions were used during early validation
+- Future iterations will reduce permissions toward least privilege
+
+This approach mirrors enterprise automation patterns and removes implicit administrative access.
 
 ---
 
 ## Provisioning Model
 
-Virtual machines are provisioned by **cloning from a pre-built Ubuntu 22.04 template** in Proxmox.
+Virtual machines are deployed by cloning a pre built Ubuntu 22.04 template in Proxmox.
 
-Benefits of this approach:
+Benefits of this model:
+
 - Consistent and repeatable builds
-- Faster provisioning
+- Faster deployment cycles
 - Predictable guest configuration
-- Clean separation between image creation and infrastructure orchestration
+- Clear separation between image creation and infrastructure orchestration
 
-Cloud-init is used to:
-- Create a non-root user
-- Inject SSH public keys
-- Enable immediate, passwordless access for automation
+Cloud init handles:
+
+- Creation of a non root user
+- Injection of SSH public keys
+- Immediate key based access for automation workflows
 
 ---
 
 ## Repository Structure
-``` text
+
+```text
 terraform/
-├── provider.tf # Provider configuration (Proxmox)
-├── variables.tf # Input variables
-├── terraform.tfvars # Local values (gitignored)
-├── vm_from_template.tf # VM cloning and initialization logic
-├── outputs.tf # Exported infrastructure data
+├── provider.tf            # Proxmox provider configuration
+├── variables.tf           # Input variables
+├── terraform.tfvars       # Local values, gitignored
+├── vm_from_template.tf    # VM cloning and initialization logic
+├── outputs.tf             # Exported infrastructure metadata
 └── README.md
 ```
+
 ---
 
 ## State Management
 
-Terraform state is maintained locally for this lab environment.
+Terraform state is maintained locally during this phase of the lab.
 
 - State files are excluded from version control
 - `.terraform/` working directories are gitignored
-- Terraform outputs are used as the integration point for downstream tooling
+- Terraform outputs serve as the integration point for downstream tooling
 
-Remote state may be introduced in later phases.
+Remote state management may be introduced in a future iteration.
 
 ---
 
 ## Lessons Learned
 
-Key takeaways from this phase include:
+Key observations from this phase:
 
-- Proxmox API tokens with **Privilege Separation** require explicit API Token Permissions
-- Terraform enforces clarity around hardware definitions (disk interfaces, NICs)
-- Refactoring from ad-hoc resources to templates simplifies scale and maintenance
-- Cloud-init integration eliminates manual provisioning steps
+- Proxmox API tokens with privilege separation require explicit permission mapping
+- Terraform exposes gaps in hardware definitions such as disk layout and network interfaces
+- Moving from ad hoc builds to template driven provisioning improves consistency and long term maintenance
+- Cloud init reduces manual provisioning steps and supports repeatable deployment
 
-Failures and misconfigurations were intentionally documented to reinforce learning.
+Failures and misconfigurations were documented to capture decisions and reinforce learning.
 
 ---
 
 ## Next Phase
 
-The next phase will use Terraform outputs as input to:
-- Configuration management
-- Baseline hardening
+The next stage will use Terraform outputs as input for:
+
+- Configuration management workflows
+- Baseline hardening activities
 - Security control enforcement
 
-Terraform’s role will remain focused on **infrastructure provisioning**, not system configuration.
+Terraform will continue to focus on infrastructure provisioning rather than system configuration.
 
 ---
 
 ## Disclaimer
 
-This Terraform configuration is designed for a controlled lab environment.
-It intentionally prioritizes learning, visibility, and repeatability over production hardening.
+This Terraform configuration is built for a controlled lab environment. The design emphasizes learning, visibility, and repeatable workflows instead of production level hardening.
